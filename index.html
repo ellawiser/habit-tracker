@@ -125,11 +125,28 @@
    (data is then saved only in your own browser).
    ========================================================== */
 const CONFIG = {
-  SUPABASE_URL: "",   // e.g. "https://abcdefgh.supabase.co"
-  SUPABASE_KEY: "",   // the anon / publishable key (safe to put here)
+  SUPABASE_URL: "https://jooaustoulydhnjkapne.supabase.co",   // e.g. "https://abcdefgh.supabase.co"
+  SUPABASE_KEY: "sb_publishable_Wp9qLsRI9vRSlSDZZWaTNg_klj76geB",   // the anon / publishable key (safe to put here)
   GROUP_NAME: "Habit Squad",
-  USERS: ["Alex", "Sam", "Jordan", "Taylor", "Morgan", "Riley", "Casey", "Jamie", "Avery", "Quinn"], // up to 10
-  BACKFILL_DAYS: 2    // how many past days people can still check off
+  USERS: ["Margaret", "Ella"], // up to 10
+  BACKFILL_DAYS: 2,   // how many past days people can still check off
+  // Fixed habit list: target = times per week (week starts Monday). `only` limits a habit to one person.
+  // Keep in sync with seed-habits.sql (used for the real database; this list seeds demo mode).
+  HABITS: [
+    { emoji: "🥗", name: "Salad bar", target: 3 },
+    { emoji: "💧", name: "Drink 2 water bottles", target: 7 },
+    { emoji: "☕", name: "No coffee after 3 pm", target: 7 },
+    { emoji: "🍫", name: "Had M&Ms (−1 point)", target: 0, penalty: true }, // check it off if you ate them
+    { emoji: "🏃", name: "Run", target: 3 },
+    { emoji: "🍷", name: "No weeknight drinking", target: 5 },
+    { emoji: "🍪", name: "No brownies or cookies at the office", target: 5 },
+    { emoji: "🍻", name: "No buying other people drinks", target: 7 },
+    { emoji: "💇", name: "Start doing hair", target: 5, only: "Margaret" },
+    { emoji: "😴", name: "Bed before 11 on work nights", target: 5 },
+    { emoji: "🍳", name: "Cook healthy meals at home", target: 4 },
+    { emoji: "🏠", name: "Disregard roommates", target: 7 },
+    { emoji: "👗", name: "Work outfits put together", target: 5 }
+  ]
 };
 
 /* ---------- helpers ---------- */
@@ -144,6 +161,7 @@ const addDays = (s, n) => { const d = parseDay(s); d.setDate(d.getDate() + n); r
 const today = () => dayStr(new Date());
 const diffDays = (a, b) => Math.round((parseDay(b) - parseDay(a)) / 864e5);
 const localDay = iso => dayStr(new Date(iso));
+const weekStartOf = d => addDays(d, -((parseDay(d).getDay() + 6) % 7)); // Monday
 function periodStart(p) {
   const t = today();
   if (p === "week") return addDays(t, -((parseDay(t).getDay() + 6) % 7)); // Monday
@@ -237,16 +255,15 @@ function demoApi() {
 }
 
 function seedDemo() {
-  const samples = [["💧","Drink 2L water"],["📚","Read 10 pages"],["🏃","Move 30 min"],["🧘","Meditate 5 min"],["🥗","Eat a vegetable"],["📵","No phone after 11pm"]];
   const db = { habits: [], checkins: [] }, t = today();
   const created = new Date(); created.setDate(created.getDate() - 21);
   CONFIG.USERS.forEach((u, i) => {
-    const p = 0.35 + ((i * 37) % 55) / 100;
-    [samples[i % 6], samples[(i + 2) % 6], samples[(i + 4) % 6]].forEach(([emoji, name]) => {
-      const h = { id: uid(), username: u, name, emoji, active: true, created_at: created.toISOString(), archived_at: null };
+    const skill = 0.5 + ((i * 37) % 40) / 100;
+    CONFIG.HABITS.filter(x => !x.only || x.only === u).forEach((x, n) => {
+      const h = { id: uid(), username: u, name: x.name, emoji: x.emoji, target: x.target, penalty: !!x.penalty, sort_order: n, active: true, created_at: created.toISOString(), archived_at: null };
       db.habits.push(h);
       for (let k = 1; k <= 21; k++)
-        if (Math.random() < p) db.checkins.push({ id: uid(), username: u, habit_id: h.id, day: addDays(t, -k), photo_url: null, created_at: new Date(Date.now() - k * 864e5).toISOString() });
+        if (Math.random() < (x.penalty ? 1 : x.target) / 7 * skill * (x.penalty ? 0.3 : 1)) db.checkins.push({ id: uid(), username: u, habit_id: h.id, day: addDays(t, -k), photo_url: null, created_at: new Date(Date.now() - k * 864e5).toISOString() });
     });
   });
   return db;
@@ -296,20 +313,43 @@ function streakFor(user) {
   let n = 0; while (days.has(d)) { n++; d = addDays(d, -1); }
   return n;
 }
+function weekCounts(user, weekStart) {
+  const end = addDays(weekStart, 6), m = new Map();
+  for (const c of state.checkins)
+    if (c.username === user && c.day >= weekStart && c.day <= end) m.set(c.habit_id, (m.get(c.habit_id) || 0) + 1);
+  return m;
+}
 function statsFor(user, period) {
   const t = today(), start = periodStart(period);
   const hs = state.habits.filter(h => h.username === user);
-  const done = state.checkins.filter(c => c.username === user && (!start || c.day >= start) && c.day <= t).length;
-  let possible = 0;
-  for (const h of hs) {
-    let from = localDay(h.created_at); if (start && from < start) from = start;
-    let to = !h.active && h.archived_at ? localDay(h.archived_at) : t; if (to > t) to = t;
-    if (to >= from) possible += diffDays(from, to) + 1;
+  if (period === "today") {
+    const mine = new Map(hs.filter(h => h.active).map(h => [h.id, h]));
+    let done = 0, possible = [...mine.values()].filter(h => !h.penalty).length;
+    for (const c of state.checkins) {
+      const h = c.username === user && c.day === t && mine.get(c.habit_id);
+      if (h) done += h.penalty ? -1 : 1;
+    }
+    return { done, rate: possible ? Math.max(0, Math.min(100, Math.round(done / possible * 100))) : 0,
+      streak: streakFor(user), todayDone: done, todayTotal: possible };
+  }
+  const first = hs.length ? hs.map(h => localDay(h.created_at)).sort()[0] : t;
+  let w = weekStartOf(start && start > first ? start : first);
+  const last = weekStartOf(t);
+  let done = 0, possible = 0;
+  for (; w <= last; w = addDays(w, 7)) {
+    const counts = weekCounts(user, w);
+    for (const h of hs) {
+      if (localDay(h.created_at) > addDays(w, 6)) continue;
+      const n = counts.get(h.id) || 0;
+      if (h.penalty) { done -= n; continue; } // each check-in costs a point
+      const target = h.target || 7;
+      done += Math.min(n, target); possible += target;
+    }
   }
   const active = hs.filter(h => h.active).map(h => h.id);
   return {
     done,
-    rate: possible ? Math.min(100, Math.round(done / possible * 100)) : 0,
+    rate: possible ? Math.max(0, Math.min(100, Math.round(done / possible * 100))) : 0,
     streak: streakFor(user),
     todayDone: state.checkins.filter(c => c.username === user && c.day === t && active.includes(c.habit_id)).length,
     todayTotal: active.length
@@ -329,11 +369,13 @@ function viewPicker() {
 function demoBanner() {
   return `<div class="banner"><span><b>Demo mode</b> — data lives only in this browser. Add your Supabase keys to go live.</span><button data-action="reset-demo">Reset</button></div>`;
 }
-function habitRow(h, c) {
+function habitRow(h, c, count) {
+  const target = h.target || 7, met = !h.penalty && count >= target;
+  const prog = h.penalty ? (count ? `−${count} point${count > 1 ? "s" : ""} this week` : "no M&Ms yet 🎉") : `${met ? "✓ " : ""}${count}/${target} this week`;
   const busy = state.uploading.has(h.id);
   return `<div class="habit">
     <button class="check ${c ? "on" : ""}" data-action="toggle" data-id="${h.id}" aria-label="${c ? "Uncheck" : "Check"} ${esc(h.name)}">${c ? "✓" : ""}</button>
-    <div class="hname ${c ? "done" : ""}"><span class="em">${esc(h.emoji || "✅")}</span>${esc(h.name)}</div>
+    <div class="hname ${c ? "done" : ""}"><span class="em">${esc(h.emoji || "✅")}</span>${esc(h.name)}<div class="muted small wk ${met ? "met" : ""}">${prog}</div></div>
     ${c && c.photo_url ? `<img class="thumb" src="${esc(c.photo_url)}" data-action="zoom" data-src="${esc(c.photo_url)}" data-cap="${esc(h.emoji + " " + h.name + " · " + prettyDay(c.day))}" alt="Photo for ${esc(h.name)}">` : ""}
     <label class="cam ${busy ? "busy" : ""}" title="${c && c.photo_url ? "Replace photo" : "Add photo"}">${busy ? "⏳" : "📷"}
       <input type="file" accept="image/*" data-upload="${h.id}" hidden ${busy ? "disabled" : ""}>
@@ -342,7 +384,8 @@ function habitRow(h, c) {
 }
 function viewToday() {
   const me = state.me, day = state.day, t = today();
-  const habits = state.habits.filter(h => h.username === me && h.active);
+  const habits = state.habits.filter(h => h.username === me && h.active).sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+  const wcounts = weekCounts(me, weekStartOf(day));
   const byHabit = new Map(state.checkins.filter(c => c.username === me && c.day === day).map(c => [c.habit_id, c]));
   const done = habits.filter(h => byHabit.has(h.id)).length;
   const s = statsFor(me, "week");
@@ -354,22 +397,13 @@ function viewToday() {
       <button class="icon" data-action="next-day" aria-label="Next day" ${day >= t ? "disabled" : ""}>›</button>
     </div>
     <div class="bar big"><i style="width:${habits.length ? done / habits.length * 100 : 0}%"></i></div>
-    <div class="habits">${habits.length ? habits.map(h => habitRow(h, byHabit.get(h.id))).join("") : `<p class="empty">No habits yet — add your first one below 👇</p>`}</div>
+    <div class="habits">${habits.length ? habits.map(h => habitRow(h, byHabit.get(h.id), wcounts.get(h.id) || 0)).join("") : `<p class="empty">No habits set up yet — run seed-habits.sql in Supabase.</p>`}</div>
   </div>
   <div class="stats">
     <div class="stat"><b>🔥 ${s.streak}</b><span class="muted small">day streak</span></div>
-    <div class="stat"><b>${s.done}</b><span class="muted small">done this week</span></div>
+    <div class="stat"><b>${s.done}</b><span class="muted small">goal check-ins this week</span></div>
     <div class="stat"><b>${s.rate}%</b><span class="muted small">this week</span></div>
-  </div>
-  <details class="card" id="manage" ${state.manageOpen || !habits.length ? "open" : ""}>
-    <summary>Manage my habits</summary>
-    <form class="addrow" data-form="add-habit">
-      <input class="emoji" name="emoji" maxlength="8" placeholder="✅" aria-label="Emoji">
-      <input name="name" maxlength="60" required placeholder="e.g. Read 10 pages" aria-label="Habit name">
-      <button class="btn">Add</button>
-    </form>
-    ${habits.map(h => `<div class="mrow"><span>${esc(h.emoji || "✅")} ${esc(h.name)}</span><button class="link" data-action="archive" data-id="${h.id}">Archive</button></div>`).join("")}
-  </details>`;
+  </div>`;
 }
 function viewBoard() {
   const p = state.period;
@@ -380,7 +414,7 @@ function viewBoard() {
   const photos = state.checkins.filter(c => c.photo_url)
     .sort((a, b) => (b.created_at || "").localeCompare(a.created_at || "")).slice(0, 30);
   return `
-  <div class="seg">${[["week","This week"],["month","This month"],["all","All time"]].map(([k, l]) =>
+  <div class="seg">${[["today","Today"],["week","This week"],["month","This month"],["all","All time"]].map(([k, l]) =>
     `<button data-action="period" data-p="${k}" class="${p === k ? "on" : ""}">${l}</button>`).join("")}</div>
   <div class="card">
     ${rows.map((r, i) => `<div class="lb ${r.u === state.me ? "me" : ""}">
@@ -388,7 +422,7 @@ function viewBoard() {
       <div>
         <div class="lbname">${esc(r.u)} ${r.u === state.me ? '<span class="you">you</span>' : ""}</div>
         <div class="bar"><i style="width:${r.rate}%"></i></div>
-        <div class="muted small" style="margin-top:4px">${r.rate}% completion · 🔥 ${r.streak} · today ${r.todayDone}/${r.todayTotal}</div>
+        <div class="muted small" style="margin-top:4px">${r.rate}% of weekly goals · 🔥 ${r.streak} · today ${r.todayDone}/${r.todayTotal}</div>
       </div>
       <div class="score"><b>${r.done}</b><span class="muted small">done</span></div>
     </div>`).join("")}
@@ -455,26 +489,11 @@ app.addEventListener("click", async e => {
   else if (a === "period") { state.period = el.dataset.p; render(); }
   else if (a === "toggle") toggle(el.dataset.id);
   else if (a === "zoom") { const lb = $("#lightbox"); lb.querySelector("img").src = el.dataset.src; lb.querySelector("p").textContent = el.dataset.cap || ""; lb.classList.add("show"); }
-  else if (a === "archive") {
-    const h = state.habits.find(h => h.id === el.dataset.id);
-    if (!h || !confirm(`Archive "${h.name}"? Past check-ins still count on the leaderboard.`)) return;
-    try { await api.archiveHabit(h.id); await load(); } catch (err) { toast(err.message); }
-  }
   else if (a === "reset-demo") { if (confirm("Reset all demo data?")) { api.reset(); state.loaded = false; await load(); } }
-});
-app.addEventListener("submit", async e => {
-  if (e.target.dataset.form !== "add-habit") return;
-  e.preventDefault();
-  const f = e.target, name = f.elements.name.value.trim(), emoji = f.elements.emoji.value.trim() || "✅";
-  if (!name) return;
-  state.manageOpen = true;
-  try { await api.addHabit(state.me, name, emoji); f.reset(); document.activeElement?.blur(); await load(); toast("Habit added"); }
-  catch (err) { toast(err.message); }
 });
 app.addEventListener("change", e => {
   const id = e.target.dataset?.upload; if (id) upload(id, e.target.files[0]);
 });
-app.addEventListener("toggle", e => { if (e.target.id === "manage") state.manageOpen = e.target.open; }, true);
 $("#lightbox").addEventListener("click", () => $("#lightbox").classList.remove("show"));
 document.addEventListener("keydown", e => { if (e.key === "Escape") $("#lightbox").classList.remove("show"); });
 
