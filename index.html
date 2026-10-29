@@ -1,0 +1,493 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Habit Squad</title>
+<meta name="theme-color" content="#16a34a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Habit Squad">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔥</text></svg>">
+<style>
+  :root{
+    --bg:#f5f6fa; --card:#ffffff; --text:#141620; --muted:#6b7280; --line:#e6e8ef;
+    --accent:#16a34a; --accent-soft:#dcfce7; --danger:#dc2626;
+    --shadow:0 1px 2px rgba(0,0,0,.04),0 6px 20px rgba(0,0,0,.05);
+  }
+  @media (prefers-color-scheme:dark){
+    :root{ --bg:#0d1016; --card:#161a23; --text:#e9ebf1; --muted:#98a1b1; --line:#252b37;
+           --accent:#22c55e; --accent-soft:#12301d; --shadow:none; }
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--text)}
+  body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-tap-highlight-color:transparent;line-height:1.35}
+  button,input{font:inherit;color:inherit}
+  button{cursor:pointer}
+  .wrap{max-width:560px;margin:0 auto;padding:16px 16px calc(96px + env(safe-area-inset-bottom))}
+  header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:6px 0 16px}
+  h1{font-size:22px;margin:0;letter-spacing:-.01em}
+  h2{font-size:17px;margin:22px 0 10px}
+  .muted{color:var(--muted)} .small{font-size:13px}
+  .chip{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:var(--card);font-size:14px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:var(--shadow);margin-bottom:14px}
+  .banner{background:#fef3c7;color:#78350f;border-radius:12px;padding:10px 12px;font-size:13px;margin-bottom:14px;display:flex;gap:10px;align-items:center;justify-content:space-between}
+  @media (prefers-color-scheme:dark){.banner{background:#3a2c0a;color:#fcd34d}}
+  .banner button{background:none;border:1px solid currentColor;border-radius:8px;padding:3px 8px;font-size:12px;flex:none}
+
+  /* picker */
+  .picker{text-align:center;padding-top:48px}
+  .hero{font-size:56px}
+  .picker h1{font-size:28px;margin:8px 0 4px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:24px}
+  .pick{padding:16px 10px;border-radius:14px;border:1px solid var(--line);background:var(--card);font-weight:600;font-size:16px;box-shadow:var(--shadow)}
+  .pick:hover{border-color:var(--accent)}
+
+  /* day nav + habits */
+  .daynav{display:flex;align-items:center;justify-content:space-between;text-align:center}
+  .dlabel{font-weight:700;font-size:18px}
+  .icon{width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:transparent;font-size:22px;line-height:1}
+  .icon:disabled{opacity:.3;cursor:default}
+  .bar{height:6px;background:var(--line);border-radius:99px;overflow:hidden;margin-top:6px}
+  .bar.big{height:8px;margin:14px 0 6px}
+  .bar>i{display:block;height:100%;background:var(--accent);border-radius:99px;transition:width .3s}
+  .habit{display:flex;align-items:center;gap:12px;padding:11px 0;border-top:1px solid var(--line)}
+  .habits .habit:first-child{border-top:0}
+  .check{width:42px;height:42px;border-radius:13px;border:2px solid var(--line);background:transparent;font-size:20px;font-weight:800;display:grid;place-items:center;flex:none;color:#fff;transition:transform .1s}
+  .check:active{transform:scale(.92)}
+  .check.on{background:var(--accent);border-color:var(--accent)}
+  .hname{flex:1;min-width:0;font-weight:600;overflow-wrap:anywhere}
+  .hname.done{color:var(--muted)}
+  .em{margin-right:4px}
+  .thumb{width:42px;height:42px;border-radius:10px;object-fit:cover;cursor:zoom-in;flex:none;border:1px solid var(--line)}
+  .cam{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:19px;cursor:pointer;flex:none;border:1px dashed var(--line)}
+  .cam.busy{animation:pulse 1s infinite}
+  @keyframes pulse{50%{opacity:.35}}
+  .empty{color:var(--muted);text-align:center;padding:14px 0 4px;margin:0}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px;text-align:center;box-shadow:var(--shadow)}
+  .stat b{display:block;font-size:22px}
+  details.card>summary{font-weight:700;cursor:pointer;list-style:none}
+  details.card>summary::after{content:"＋";float:right;color:var(--muted)}
+  details[open].card>summary::after{content:"－"}
+  .addrow{display:flex;gap:8px;margin-top:14px}
+  .addrow input{border:1px solid var(--line);background:var(--bg);border-radius:12px;padding:10px 12px;min-width:0}
+  .addrow input.emoji{width:56px;text-align:center;flex:none}
+  .addrow input[name=name]{flex:1}
+  .btn{background:var(--accent);color:#fff;border:0;border-radius:12px;padding:10px 16px;font-weight:700;flex:none}
+  .mrow{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-top:1px solid var(--line);margin-top:2px}
+  .link{background:none;border:0;color:var(--muted);font-size:13px;text-decoration:underline}
+
+  /* leaderboard */
+  .seg{display:flex;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:3px;margin-bottom:14px}
+  .seg button{flex:1;border:0;background:transparent;border-radius:9px;padding:8px;font-weight:600;color:var(--muted)}
+  .seg button.on{background:var(--accent);color:#fff}
+  .lb{display:grid;grid-template-columns:34px 1fr auto;gap:12px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
+  .lb:first-child{border-top:0}
+  .lb.me{background:var(--accent-soft);margin:0 -16px;padding:12px 16px}
+  .medal{font-size:24px;text-align:center}
+  .rank{font-size:15px;font-weight:700;color:var(--muted)}
+  .lbname{font-weight:700}
+  .you{font-size:11px;background:var(--accent);color:#fff;border-radius:6px;padding:1px 6px;vertical-align:2px}
+  .score{text-align:right}
+  .score b{display:block;font-size:22px}
+  .feed{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+  .ph{position:relative;padding:0;border:0;border-radius:12px;overflow:hidden;aspect-ratio:1;background:var(--line)}
+  .ph img{width:100%;height:100%;object-fit:cover;display:block}
+  .ph span{position:absolute;left:0;right:0;bottom:0;padding:16px 6px 5px;font-size:11px;font-weight:700;color:#fff;text-align:left;background:linear-gradient(transparent,rgba(0,0,0,.65))}
+
+  /* tab bar */
+  .tabbar{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom);z-index:5}
+  .tabbar button{flex:1;max-width:280px;border:0;background:none;padding:12px 0 14px;font-weight:700;color:var(--muted);font-size:14px}
+  .tabbar button span{display:block;font-size:22px;margin-bottom:2px}
+  .tabbar button.on{color:var(--accent)}
+
+  /* overlays */
+  #lightbox{position:fixed;inset:0;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;flex-direction:column;z-index:20;padding:20px;cursor:zoom-out}
+  #lightbox.show{display:flex}
+  #lightbox img{max-width:100%;max-height:82vh;border-radius:12px}
+  #lightbox p{color:#fff;margin:12px 0 0;font-weight:600;text-align:center}
+  #toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);background:#111827;color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:30;max-width:90vw;text-align:center}
+  #toast.show{opacity:1;transform:translateX(-50%)}
+  .loading{text-align:center;color:var(--muted);padding:60px 0}
+</style>
+</head>
+<body>
+<div id="app"><div class="loading">Loading…</div></div>
+<div id="lightbox"><img alt=""><p></p></div>
+<div id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* ==========================================================
+   CONFIG — edit these three things, then publish.
+   Leave the Supabase fields empty to try the site in demo mode
+   (data is then saved only in your own browser).
+   ========================================================== */
+const CONFIG = {
+  SUPABASE_URL: "",   // e.g. "https://abcdefgh.supabase.co"
+  SUPABASE_KEY: "",   // the anon / publishable key (safe to put here)
+  GROUP_NAME: "Habit Squad",
+  USERS: ["Alex", "Sam", "Jordan", "Taylor", "Morgan", "Riley", "Casey", "Jamie", "Avery", "Quinn"], // up to 10
+  BACKFILL_DAYS: 2    // how many past days people can still check off
+};
+
+/* ---------- helpers ---------- */
+const $ = s => document.querySelector(s);
+const app = $("#app");
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const uid = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2));
+const pad = n => String(n).padStart(2, "0");
+const dayStr = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const parseDay = s => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
+const addDays = (s, n) => { const d = parseDay(s); d.setDate(d.getDate() + n); return dayStr(d); };
+const today = () => dayStr(new Date());
+const diffDays = (a, b) => Math.round((parseDay(b) - parseDay(a)) / 864e5);
+const localDay = iso => dayStr(new Date(iso));
+function periodStart(p) {
+  const t = today();
+  if (p === "week") return addDays(t, -((parseDay(t).getDay() + 6) % 7)); // Monday
+  if (p === "month") return t.slice(0, 8) + "01";
+  return null;
+}
+function prettyDay(s) {
+  if (s === today()) return "Today";
+  if (s === addDays(today(), -1)) return "Yesterday";
+  return parseDay(s).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+}
+let toastTimer;
+function toast(msg) {
+  const t = $("#toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), 3200);
+}
+function store(k, v) { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch {} }
+function recall(k) { try { return localStorage.getItem(k); } catch { return null; } }
+
+/* ---------- data layer ---------- */
+const DEMO = !CONFIG.SUPABASE_URL || !CONFIG.SUPABASE_KEY;
+const api = DEMO ? demoApi() : supabaseApi();
+
+function supabaseApi() {
+  const sb = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
+  const ok = ({ data, error }) => { if (error) throw new Error(error.message); return data; };
+  async function fetchAll(table, cols) {
+    const out = [], size = 1000;
+    for (let from = 0; ; from += size) {
+      const rows = ok(await sb.from(table).select(cols).order("created_at").range(from, from + size - 1));
+      out.push(...rows);
+      if (rows.length < size) return out;
+    }
+  }
+  return {
+    habits: () => fetchAll("habits", "*"),
+    checkins: () => fetchAll("checkins", "id,username,habit_id,day,photo_url,created_at"),
+    addHabit: async (username, name, emoji) => ok(await sb.from("habits").insert({ username, name, emoji })),
+    archiveHabit: async id => ok(await sb.from("habits").update({ active: false, archived_at: new Date().toISOString() }).eq("id", id)),
+    check: async (username, habit_id, day) =>
+      ok(await sb.from("checkins").upsert({ username, habit_id, day }, { onConflict: "habit_id,day", ignoreDuplicates: true })),
+    uncheck: async (habit_id, day) => ok(await sb.from("checkins").delete().eq("habit_id", habit_id).eq("day", day)),
+    setPhoto: async (username, habit_id, day, photo_url) =>
+      ok(await sb.from("checkins").upsert({ username, habit_id, day, photo_url }, { onConflict: "habit_id,day" })),
+    async uploadPhoto(username, blob) {
+      const path = `${username.replace(/[^a-z0-9_-]/gi, "_")}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
+      ok(await sb.storage.from("photos").upload(path, blob, { contentType: "image/jpeg", cacheControl: "31536000" }));
+      return sb.storage.from("photos").getPublicUrl(path).data.publicUrl;
+    }
+  };
+}
+
+function demoApi() {
+  const KEY = "habitsquad-demo";
+  const read = () => {
+    try { const db = JSON.parse(localStorage.getItem(KEY)); if (db) return db; } catch {}
+    const db = seedDemo(); write(db); return db;
+  };
+  const write = db => {
+    try { localStorage.setItem(KEY, JSON.stringify(db)); }
+    catch { throw new Error("Demo storage is full — connect Supabase for real photo storage."); }
+  };
+  const find = (db, h, d) => db.checkins.find(c => c.habit_id === h && c.day === d);
+  return {
+    habits: async () => read().habits,
+    checkins: async () => read().checkins,
+    async addHabit(username, name, emoji) {
+      const db = read(); db.habits.push({ id: uid(), username, name, emoji, active: true, created_at: new Date().toISOString(), archived_at: null }); write(db);
+    },
+    async archiveHabit(id) {
+      const db = read(); const h = db.habits.find(h => h.id === id);
+      if (h) { h.active = false; h.archived_at = new Date().toISOString(); } write(db);
+    },
+    async check(username, habit_id, day) {
+      const db = read(); if (!find(db, habit_id, day)) db.checkins.push({ id: uid(), username, habit_id, day, photo_url: null, created_at: new Date().toISOString() }); write(db);
+    },
+    async uncheck(habit_id, day) {
+      const db = read(); db.checkins = db.checkins.filter(c => !(c.habit_id === habit_id && c.day === day)); write(db);
+    },
+    async setPhoto(username, habit_id, day, photo_url) {
+      const db = read(); const c = find(db, habit_id, day);
+      if (c) { c.photo_url = photo_url; c.created_at = new Date().toISOString(); }
+      else db.checkins.push({ id: uid(), username, habit_id, day, photo_url, created_at: new Date().toISOString() });
+      write(db);
+    },
+    uploadPhoto: (username, blob) => new Promise((res, rej) => {
+      const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(blob);
+    }),
+    reset() { localStorage.removeItem(KEY); }
+  };
+}
+
+function seedDemo() {
+  const samples = [["💧","Drink 2L water"],["📚","Read 10 pages"],["🏃","Move 30 min"],["🧘","Meditate 5 min"],["🥗","Eat a vegetable"],["📵","No phone after 11pm"]];
+  const db = { habits: [], checkins: [] }, t = today();
+  const created = new Date(); created.setDate(created.getDate() - 21);
+  CONFIG.USERS.forEach((u, i) => {
+    const p = 0.35 + ((i * 37) % 55) / 100;
+    [samples[i % 6], samples[(i + 2) % 6], samples[(i + 4) % 6]].forEach(([emoji, name]) => {
+      const h = { id: uid(), username: u, name, emoji, active: true, created_at: created.toISOString(), archived_at: null };
+      db.habits.push(h);
+      for (let k = 1; k <= 21; k++)
+        if (Math.random() < p) db.checkins.push({ id: uid(), username: u, habit_id: h.id, day: addDays(t, -k), photo_url: null, created_at: new Date(Date.now() - k * 864e5).toISOString() });
+    });
+  });
+  return db;
+}
+
+/* ---------- image compression ---------- */
+function compressImage(file, maxDim, quality) {
+  return new Promise((resolve, reject) => {
+    const img = new Image(), url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const s = Math.min(1, maxDim / Math.max(img.naturalWidth, img.naturalHeight));
+      const c = document.createElement("canvas");
+      c.width = Math.round(img.naturalWidth * s); c.height = Math.round(img.naturalHeight * s);
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+      c.toBlob(b => b ? resolve(b) : reject(new Error("Couldn't process image")), "image/jpeg", quality);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("That file couldn't be read as an image — try a JPG or PNG.")); };
+    img.src = url;
+  });
+}
+
+/* ---------- state ---------- */
+const state = {
+  me: recall("habitsquad-user"),
+  tab: recall("habitsquad-tab") || "today",
+  day: today(),
+  period: "week",
+  habits: [], checkins: [],
+  loaded: false, manageOpen: false,
+  uploading: new Set()
+};
+
+async function load() {
+  try {
+    const [habits, checkins] = await Promise.all([api.habits(), api.checkins()]);
+    state.habits = habits; state.checkins = checkins; state.loaded = true;
+    const a = document.activeElement;
+    if (!(a && app.contains(a) && a.tagName === "INPUT")) render(); // don't wipe what someone is typing
+  } catch (err) { toast("Couldn't load data: " + err.message); }
+}
+
+/* ---------- stats ---------- */
+function streakFor(user) {
+  const days = new Set(state.checkins.filter(c => c.username === user).map(c => c.day));
+  let d = today(); if (!days.has(d)) d = addDays(d, -1);
+  let n = 0; while (days.has(d)) { n++; d = addDays(d, -1); }
+  return n;
+}
+function statsFor(user, period) {
+  const t = today(), start = periodStart(period);
+  const hs = state.habits.filter(h => h.username === user);
+  const done = state.checkins.filter(c => c.username === user && (!start || c.day >= start) && c.day <= t).length;
+  let possible = 0;
+  for (const h of hs) {
+    let from = localDay(h.created_at); if (start && from < start) from = start;
+    let to = !h.active && h.archived_at ? localDay(h.archived_at) : t; if (to > t) to = t;
+    if (to >= from) possible += diffDays(from, to) + 1;
+  }
+  const active = hs.filter(h => h.active).map(h => h.id);
+  return {
+    done,
+    rate: possible ? Math.min(100, Math.round(done / possible * 100)) : 0,
+    streak: streakFor(user),
+    todayDone: state.checkins.filter(c => c.username === user && c.day === t && active.includes(c.habit_id)).length,
+    todayTotal: active.length
+  };
+}
+
+/* ---------- views ---------- */
+function viewPicker() {
+  return `<div class="wrap picker">
+    ${DEMO ? demoBanner() : ""}
+    <div class="hero">🔥</div>
+    <h1>${esc(CONFIG.GROUP_NAME)}</h1>
+    <p class="muted">Who are you?</p>
+    <div class="grid">${CONFIG.USERS.map(u => `<button class="pick" data-action="pick" data-user="${esc(u)}">${esc(u)}</button>`).join("")}</div>
+  </div>`;
+}
+function demoBanner() {
+  return `<div class="banner"><span><b>Demo mode</b> — data lives only in this browser. Add your Supabase keys to go live.</span><button data-action="reset-demo">Reset</button></div>`;
+}
+function habitRow(h, c) {
+  const busy = state.uploading.has(h.id);
+  return `<div class="habit">
+    <button class="check ${c ? "on" : ""}" data-action="toggle" data-id="${h.id}" aria-label="${c ? "Uncheck" : "Check"} ${esc(h.name)}">${c ? "✓" : ""}</button>
+    <div class="hname ${c ? "done" : ""}"><span class="em">${esc(h.emoji || "✅")}</span>${esc(h.name)}</div>
+    ${c && c.photo_url ? `<img class="thumb" src="${esc(c.photo_url)}" data-action="zoom" data-src="${esc(c.photo_url)}" data-cap="${esc(h.emoji + " " + h.name + " · " + prettyDay(c.day))}" alt="Photo for ${esc(h.name)}">` : ""}
+    <label class="cam ${busy ? "busy" : ""}" title="${c && c.photo_url ? "Replace photo" : "Add photo"}">${busy ? "⏳" : "📷"}
+      <input type="file" accept="image/*" data-upload="${h.id}" hidden ${busy ? "disabled" : ""}>
+    </label>
+  </div>`;
+}
+function viewToday() {
+  const me = state.me, day = state.day, t = today();
+  const habits = state.habits.filter(h => h.username === me && h.active);
+  const byHabit = new Map(state.checkins.filter(c => c.username === me && c.day === day).map(c => [c.habit_id, c]));
+  const done = habits.filter(h => byHabit.has(h.id)).length;
+  const s = statsFor(me, "week");
+  return `
+  <div class="card">
+    <div class="daynav">
+      <button class="icon" data-action="prev-day" aria-label="Previous day" ${day <= addDays(t, -CONFIG.BACKFILL_DAYS) ? "disabled" : ""}>‹</button>
+      <div><div class="dlabel">${prettyDay(day)}</div><div class="muted small">${done} of ${habits.length} done</div></div>
+      <button class="icon" data-action="next-day" aria-label="Next day" ${day >= t ? "disabled" : ""}>›</button>
+    </div>
+    <div class="bar big"><i style="width:${habits.length ? done / habits.length * 100 : 0}%"></i></div>
+    <div class="habits">${habits.length ? habits.map(h => habitRow(h, byHabit.get(h.id))).join("") : `<p class="empty">No habits yet — add your first one below 👇</p>`}</div>
+  </div>
+  <div class="stats">
+    <div class="stat"><b>🔥 ${s.streak}</b><span class="muted small">day streak</span></div>
+    <div class="stat"><b>${s.done}</b><span class="muted small">done this week</span></div>
+    <div class="stat"><b>${s.rate}%</b><span class="muted small">this week</span></div>
+  </div>
+  <details class="card" id="manage" ${state.manageOpen || !habits.length ? "open" : ""}>
+    <summary>Manage my habits</summary>
+    <form class="addrow" data-form="add-habit">
+      <input class="emoji" name="emoji" maxlength="8" placeholder="✅" aria-label="Emoji">
+      <input name="name" maxlength="60" required placeholder="e.g. Read 10 pages" aria-label="Habit name">
+      <button class="btn">Add</button>
+    </form>
+    ${habits.map(h => `<div class="mrow"><span>${esc(h.emoji || "✅")} ${esc(h.name)}</span><button class="link" data-action="archive" data-id="${h.id}">Archive</button></div>`).join("")}
+  </details>`;
+}
+function viewBoard() {
+  const p = state.period;
+  const rows = CONFIG.USERS.map(u => ({ u, ...statsFor(u, p) }))
+    .sort((a, b) => b.done - a.done || b.rate - a.rate || b.streak - a.streak);
+  const medal = i => ["🥇", "🥈", "🥉"][i] || `<span class="rank">${i + 1}</span>`;
+  const hmap = new Map(state.habits.map(h => [h.id, h]));
+  const photos = state.checkins.filter(c => c.photo_url)
+    .sort((a, b) => (b.created_at || "").localeCompare(a.created_at || "")).slice(0, 30);
+  return `
+  <div class="seg">${[["week","This week"],["month","This month"],["all","All time"]].map(([k, l]) =>
+    `<button data-action="period" data-p="${k}" class="${p === k ? "on" : ""}">${l}</button>`).join("")}</div>
+  <div class="card">
+    ${rows.map((r, i) => `<div class="lb ${r.u === state.me ? "me" : ""}">
+      <div class="medal">${medal(i)}</div>
+      <div>
+        <div class="lbname">${esc(r.u)} ${r.u === state.me ? '<span class="you">you</span>' : ""}</div>
+        <div class="bar"><i style="width:${r.rate}%"></i></div>
+        <div class="muted small" style="margin-top:4px">${r.rate}% completion · 🔥 ${r.streak} · today ${r.todayDone}/${r.todayTotal}</div>
+      </div>
+      <div class="score"><b>${r.done}</b><span class="muted small">done</span></div>
+    </div>`).join("")}
+  </div>
+  <h2>📸 Recent photos</h2>
+  ${photos.length ? `<div class="feed">${photos.map(c => {
+      const h = hmap.get(c.habit_id) || {};
+      const cap = `${c.username} · ${h.emoji || ""} ${h.name || ""} · ${prettyDay(c.day)}`;
+      return `<button class="ph" data-action="zoom" data-src="${esc(c.photo_url)}" data-cap="${esc(cap)}"><img src="${esc(c.photo_url)}" loading="lazy" alt=""><span>${esc(c.username)}</span></button>`;
+    }).join("")}</div>`
+    : `<p class="muted">No photos yet. Tap 📷 next to a habit to add one.</p>`}`;
+}
+function render() {
+  if (!state.me || !CONFIG.USERS.includes(state.me)) { app.innerHTML = viewPicker(); return; }
+  app.innerHTML = `<div class="wrap">
+      ${DEMO ? demoBanner() : ""}
+      <header>
+        <h1>${esc(CONFIG.GROUP_NAME)}</h1>
+        <button class="chip" data-action="switch">👤 ${esc(state.me)} <span class="muted small">switch</span></button>
+      </header>
+      ${!state.loaded ? `<div class="loading">Loading…</div>` : state.tab === "board" ? viewBoard() : viewToday()}
+    </div>
+    <nav class="tabbar">
+      <button class="${state.tab === "today" ? "on" : ""}" data-action="tab" data-tab="today"><span>✅</span>My Day</button>
+      <button class="${state.tab === "board" ? "on" : ""}" data-action="tab" data-tab="board"><span>🏆</span>Leaderboard</button>
+    </nav>`;
+}
+
+/* ---------- actions ---------- */
+async function toggle(habitId) {
+  const me = state.me, day = state.day;
+  const existing = state.checkins.find(c => c.habit_id === habitId && c.day === day);
+  if (existing) {
+    if (existing.photo_url && !confirm("Uncheck this habit? Its photo will be removed too.")) return;
+    state.checkins = state.checkins.filter(c => c !== existing); render();
+    try { await api.uncheck(habitId, day); } catch (err) { state.checkins.push(existing); render(); toast(err.message); }
+  } else {
+    const temp = { id: "tmp-" + uid(), username: me, habit_id: habitId, day, photo_url: null, created_at: new Date().toISOString() };
+    state.checkins.push(temp); render();
+    try { await api.check(me, habitId, day); } catch (err) { state.checkins = state.checkins.filter(c => c !== temp); render(); toast(err.message); }
+  }
+}
+async function upload(habitId, file) {
+  if (!file) return;
+  state.uploading.add(habitId); render();
+  try {
+    const blob = await compressImage(file, DEMO ? 700 : 1280, DEMO ? 0.7 : 0.82);
+    const url = await api.uploadPhoto(state.me, blob);
+    await api.setPhoto(state.me, habitId, state.day, url);
+    await load();
+    toast("Photo added — habit checked off ✓");
+  } catch (err) { toast("Upload failed: " + err.message); }
+  finally { state.uploading.delete(habitId); render(); }
+}
+
+app.addEventListener("click", async e => {
+  const el = e.target.closest("[data-action]"); if (!el) return;
+  const a = el.dataset.action;
+  if (a === "pick") { state.me = el.dataset.user; store("habitsquad-user", state.me); render(); if (!state.loaded) load(); }
+  else if (a === "switch") { state.me = null; store("habitsquad-user", null); render(); }
+  else if (a === "tab") { state.tab = el.dataset.tab; store("habitsquad-tab", state.tab); render(); window.scrollTo(0, 0); }
+  else if (a === "prev-day") { state.day = addDays(state.day, -1); render(); }
+  else if (a === "next-day") { state.day = addDays(state.day, 1); render(); }
+  else if (a === "period") { state.period = el.dataset.p; render(); }
+  else if (a === "toggle") toggle(el.dataset.id);
+  else if (a === "zoom") { const lb = $("#lightbox"); lb.querySelector("img").src = el.dataset.src; lb.querySelector("p").textContent = el.dataset.cap || ""; lb.classList.add("show"); }
+  else if (a === "archive") {
+    const h = state.habits.find(h => h.id === el.dataset.id);
+    if (!h || !confirm(`Archive "${h.name}"? Past check-ins still count on the leaderboard.`)) return;
+    try { await api.archiveHabit(h.id); await load(); } catch (err) { toast(err.message); }
+  }
+  else if (a === "reset-demo") { if (confirm("Reset all demo data?")) { api.reset(); state.loaded = false; await load(); } }
+});
+app.addEventListener("submit", async e => {
+  if (e.target.dataset.form !== "add-habit") return;
+  e.preventDefault();
+  const f = e.target, name = f.elements.name.value.trim(), emoji = f.elements.emoji.value.trim() || "✅";
+  if (!name) return;
+  state.manageOpen = true;
+  try { await api.addHabit(state.me, name, emoji); f.reset(); document.activeElement?.blur(); await load(); toast("Habit added"); }
+  catch (err) { toast(err.message); }
+});
+app.addEventListener("change", e => {
+  const id = e.target.dataset?.upload; if (id) upload(id, e.target.files[0]);
+});
+app.addEventListener("toggle", e => { if (e.target.id === "manage") state.manageOpen = e.target.open; }, true);
+$("#lightbox").addEventListener("click", () => $("#lightbox").classList.remove("show"));
+document.addEventListener("keydown", e => { if (e.key === "Escape") $("#lightbox").classList.remove("show"); });
+
+// keep things fresh: reload when the tab comes back into view, and every minute
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden || !state.me) return;
+  if (state.day > today() || state.day < addDays(today(), -CONFIG.BACKFILL_DAYS)) state.day = today();
+  load();
+});
+setInterval(() => { if (!document.hidden && state.me) load(); }, 60000);
+
+render();
+if (state.me) load();
+</script>
+</body>
+</html>
