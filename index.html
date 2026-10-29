@@ -4,110 +4,122 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Habit Squad</title>
-<meta name="theme-color" content="#16a34a">
+<meta name="theme-color" content="#6d4fd8">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Habit Squad">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔥</text></svg>">
 <style>
   :root{
-    --bg:#f5f6fa; --card:#ffffff; --text:#141620; --muted:#6b7280; --line:#e6e8ef;
-    --accent:#16a34a; --accent-soft:#dcfce7; --danger:#dc2626;
-    --shadow:0 1px 2px rgba(0,0,0,.04),0 6px 20px rgba(0,0,0,.05);
+    --bg:linear-gradient(160deg,#b7a4f5 0%,#f1b3d2 48%,#a6d3f4 100%);
+    --glass:rgba(255,255,255,.58); --glass-line:rgba(255,255,255,.75);
+    --text:#1d1b2f; --muted:#5f5a7c; --line:rgba(29,27,47,.14);
+    --accent:#6d4fd8; --accent-soft:rgba(109,79,216,.14); --danger:#ef4444; --pink:#E87A90;
+    --shadow:0 8px 28px rgba(60,40,120,.16);
   }
   @media (prefers-color-scheme:dark){
-    :root{ --bg:#0d1016; --card:#161a23; --text:#e9ebf1; --muted:#98a1b1; --line:#252b37;
-           --accent:#22c55e; --accent-soft:#12301d; --shadow:none; }
+    :root{ --bg:linear-gradient(160deg,#1d1b2f 0%,#2b2840 50%,#1b2447 100%);
+           --glass:rgba(255,255,255,.075); --glass-line:rgba(255,255,255,.14);
+           --text:#f1eefc; --muted:#a8a3c4; --line:rgba(255,255,255,.16);
+           --accent:#E87A90; --accent-soft:rgba(232,122,144,.18); --shadow:0 8px 28px rgba(0,0,0,.3); }
   }
   *{box-sizing:border-box}
-  html,body{margin:0;background:var(--bg);color:var(--text)}
+  html,body{margin:0;color:var(--text);background:#2b2840}
+  body::before{content:"";position:fixed;inset:0;background:var(--bg);z-index:-1}
   body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-tap-highlight-color:transparent;line-height:1.35}
   button,input{font:inherit;color:inherit}
   button{cursor:pointer}
-  .wrap{max-width:560px;margin:0 auto;padding:16px 16px calc(96px + env(safe-area-inset-bottom))}
+  .wrap{max-width:560px;margin:0 auto;padding:16px 16px calc(110px + env(safe-area-inset-bottom))}
   header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:6px 0 16px}
-  h1{font-size:22px;margin:0;letter-spacing:-.01em}
+  h1{font-size:24px;margin:0;letter-spacing:-.02em}
   h2{font-size:17px;margin:22px 0 10px}
   .muted{color:var(--muted)} .small{font-size:13px}
-  .chip{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:var(--card);font-size:14px}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:var(--shadow);margin-bottom:14px}
-  .banner{background:#fef3c7;color:#78350f;border-radius:12px;padding:10px 12px;font-size:13px;margin-bottom:14px;display:flex;gap:10px;align-items:center;justify-content:space-between}
-  @media (prefers-color-scheme:dark){.banner{background:#3a2c0a;color:#fcd34d}}
+  .glass{background:var(--glass);border:1px solid var(--glass-line);box-shadow:var(--shadow);-webkit-backdrop-filter:blur(18px) saturate(1.3);backdrop-filter:blur(18px) saturate(1.3)}
+  .chip{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:999px;font-size:14px;background:var(--glass);border:1px solid var(--glass-line);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+  .card{background:var(--glass);border:1px solid var(--glass-line);border-radius:24px;padding:16px;box-shadow:var(--shadow);margin-bottom:14px;-webkit-backdrop-filter:blur(18px) saturate(1.3);backdrop-filter:blur(18px) saturate(1.3)}
+  .banner{background:#fef3c7;color:#78350f;border-radius:14px;padding:10px 12px;font-size:13px;margin-bottom:14px;display:flex;gap:10px;align-items:center;justify-content:space-between}
   .banner button{background:none;border:1px solid currentColor;border-radius:8px;padding:3px 8px;font-size:12px;flex:none}
+
+  /* rings */
+  .ring{position:relative;display:grid;place-items:center;flex:none}
+  .ring svg{position:absolute;inset:0}
+  .ring .rt{fill:none;stroke:var(--line)} .ring .rp{fill:none;transition:stroke-dashoffset .5s}
+  .rin{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1}
 
   /* picker */
   .picker{text-align:center;padding-top:48px}
   .hero{font-size:56px}
-  .picker h1{font-size:28px;margin:8px 0 4px}
+  .picker h1{font-size:30px;margin:8px 0 4px}
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:24px}
-  .pick{padding:16px 10px;border-radius:14px;border:1px solid var(--line);background:var(--card);font-weight:600;font-size:16px;box-shadow:var(--shadow)}
+  .pick{padding:18px 10px;border-radius:20px;border:1px solid var(--glass-line);background:var(--glass);font-weight:700;font-size:17px;box-shadow:var(--shadow);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
   .pick:hover{border-color:var(--accent)}
 
-  /* day nav + habits */
-  .daynav{display:flex;align-items:center;justify-content:space-between;text-align:center}
-  .dlabel{font-weight:700;font-size:18px}
-  .icon{width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:transparent;font-size:22px;line-height:1}
-  .icon:disabled{opacity:.3;cursor:default}
-  .bar{height:6px;background:var(--line);border-radius:99px;overflow:hidden;margin-top:6px}
-  .bar.big{height:8px;margin:14px 0 6px}
-  .bar>i{display:block;height:100%;background:var(--accent);border-radius:99px;transition:width .3s}
-  .habit{display:flex;align-items:center;gap:12px;padding:11px 0;border-top:1px solid var(--line)}
-  .habits .habit:first-child{border-top:0}
-  .check{width:42px;height:42px;border-radius:13px;border:2px solid var(--line);background:transparent;font-size:20px;font-weight:800;display:grid;place-items:center;flex:none;color:#fff;transition:transform .1s}
-  .check:active{transform:scale(.92)}
-  .check.on{background:var(--accent);border-color:var(--accent)}
-  .hname{flex:1;min-width:0;font-weight:600;overflow-wrap:anywhere}
+  /* My Day: hero + week strip */
+  .herocard{display:flex;align-items:center;gap:18px}
+  .heroring b{font-size:30px;letter-spacing:-.02em}
+  .herotxt b.big{font-size:22px;display:block;letter-spacing:-.01em}
+  .herotxt .pill{display:inline-block;margin-top:8px;padding:4px 10px;border-radius:99px;background:var(--accent-soft);font-size:13px;font-weight:700}
+  .week{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:14px}
+  .wd{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0 6px;border-radius:16px;border:1px solid transparent;background:transparent;font-size:12px;color:var(--muted)}
+  .wd b{font-size:16px;color:var(--text)}
+  .wd i{width:6px;height:6px;border-radius:50%;background:transparent;margin-top:2px}
+  .wd.has i{background:var(--pink)}
+  .wd.sel{background:var(--glass);border-color:var(--glass-line);box-shadow:var(--shadow)}
+  .wd.sel b{color:var(--accent)}
+  .wd:disabled{opacity:.35;cursor:default}
+  .dlabel{font-weight:800;font-size:18px;margin:2px 2px 10px;display:flex;justify-content:space-between;align-items:baseline}
+
+  /* habit cards */
+  .habit{--c:#E87A90;display:flex;align-items:center;gap:12px;padding:12px;margin-bottom:10px;border-radius:22px;background:var(--glass);border:1px solid var(--glass-line);box-shadow:var(--shadow);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
+  .eic{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font-size:23px;flex:none;background:color-mix(in srgb,var(--c) 30%,transparent)}
+  .hname{flex:1;min-width:0;font-weight:700;overflow-wrap:anywhere}
   .hname.done{color:var(--muted)}
-  .em{margin-right:4px}
-  .thumb{width:42px;height:42px;border-radius:10px;object-fit:cover;cursor:zoom-in;flex:none;border:1px solid var(--line)}
-  .cam{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:19px;cursor:pointer;flex:none;border:1px dashed var(--line)}
+  .wk{font-weight:600;margin-top:1px} .wk.met{color:#16a34a}
+  @media (prefers-color-scheme:dark){.wk.met{color:#4ade80}}
+  .check{width:36px;height:36px;border-radius:50%;border:2px solid var(--line);background:transparent;font-size:18px;font-weight:800;display:grid;place-items:center;color:#fff;padding:0;transition:transform .1s}
+  .check:active{transform:scale(.88)}
+  .check.on{background:var(--c);border-color:var(--c)}
+  .thumb{width:40px;height:40px;border-radius:12px;object-fit:cover;cursor:zoom-in;flex:none;border:1px solid var(--glass-line)}
+  .cam{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-size:18px;cursor:pointer;flex:none;border:1px dashed var(--line)}
   .cam.busy{animation:pulse 1s infinite}
   @keyframes pulse{50%{opacity:.35}}
   .empty{color:var(--muted);text-align:center;padding:14px 0 4px;margin:0}
   .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
-  .stat{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px;text-align:center;box-shadow:var(--shadow)}
+  .stat{background:var(--glass);border:1px solid var(--glass-line);border-radius:20px;padding:12px 6px;text-align:center;box-shadow:var(--shadow);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
   .stat b{display:block;font-size:22px}
-  details.card>summary{font-weight:700;cursor:pointer;list-style:none}
-  details.card>summary::after{content:"＋";float:right;color:var(--muted)}
-  details[open].card>summary::after{content:"－"}
-  .addrow{display:flex;gap:8px;margin-top:14px}
-  .addrow input{border:1px solid var(--line);background:var(--bg);border-radius:12px;padding:10px 12px;min-width:0}
-  .addrow input.emoji{width:56px;text-align:center;flex:none}
-  .addrow input[name=name]{flex:1}
-  .btn{background:var(--accent);color:#fff;border:0;border-radius:12px;padding:10px 16px;font-weight:700;flex:none}
-  .mrow{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-top:1px solid var(--line);margin-top:2px}
-  .link{background:none;border:0;color:var(--muted);font-size:13px;text-decoration:underline}
 
   /* leaderboard */
-  .seg{display:flex;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:3px;margin-bottom:14px}
-  .seg button{flex:1;border:0;background:transparent;border-radius:9px;padding:8px;font-weight:600;color:var(--muted)}
-  .seg button.on{background:var(--accent);color:#fff}
+  .seg{display:flex;background:var(--glass);border:1px solid var(--glass-line);border-radius:16px;padding:4px;margin-bottom:14px;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+  .seg button{flex:1;border:0;background:transparent;border-radius:12px;padding:9px 4px;font-weight:700;color:var(--muted);font-size:14px}
+  .seg button.on{background:var(--accent);color:#fff;box-shadow:0 4px 12px rgba(0,0,0,.18)}
   .lb{display:grid;grid-template-columns:34px 1fr auto;gap:12px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
   .lb:first-child{border-top:0}
   .lb.me{background:var(--accent-soft);margin:0 -16px;padding:12px 16px}
-  .medal{font-size:24px;text-align:center}
+  .medal{font-size:26px;text-align:center}
   .rank{font-size:15px;font-weight:700;color:var(--muted)}
-  .lbname{font-weight:700}
+  .lbname{font-weight:800}
   .you{font-size:11px;background:var(--accent);color:#fff;border-radius:6px;padding:1px 6px;vertical-align:2px}
-  .score{text-align:right}
-  .score b{display:block;font-size:22px}
   .feed{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
-  .ph{position:relative;padding:0;border:0;border-radius:12px;overflow:hidden;aspect-ratio:1;background:var(--line)}
+  .ph{position:relative;padding:0;border:0;border-radius:16px;overflow:hidden;aspect-ratio:1;background:var(--line)}
   .ph img{width:100%;height:100%;object-fit:cover;display:block}
+  .pgroup{margin-bottom:18px}
+  .ptag{display:inline-flex;align-items:center;gap:6px;font-weight:800;font-size:14px;padding:5px 12px;border-radius:99px;background:var(--glass);border:1px solid var(--glass-line);margin-bottom:8px}
+  .ptag em{font-style:normal;font-size:12px;color:var(--muted);font-weight:700}
+  .ph .tag{position:absolute;top:6px;left:6px;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:14px;background:rgba(0,0,0,.45);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
   .ph span{position:absolute;left:0;right:0;bottom:0;padding:16px 6px 5px;font-size:11px;font-weight:700;color:#fff;text-align:left;background:linear-gradient(transparent,rgba(0,0,0,.65))}
 
-  /* tab bar */
-  .tabbar{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom);z-index:5}
-  .tabbar button{flex:1;max-width:280px;border:0;background:none;padding:12px 0 14px;font-weight:700;color:var(--muted);font-size:14px}
-  .tabbar button span{display:block;font-size:22px;margin-bottom:2px}
-  .tabbar button.on{color:var(--accent)}
+  /* floating tab bar */
+  .tabbar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(12px + env(safe-area-inset-bottom));width:min(380px,calc(100% - 32px));display:flex;padding:6px;border-radius:26px;background:var(--glass);border:1px solid var(--glass-line);box-shadow:var(--shadow);-webkit-backdrop-filter:blur(20px) saturate(1.4);backdrop-filter:blur(20px) saturate(1.4);z-index:5}
+  .tabbar button{flex:1;border:0;background:none;padding:8px 0 9px;font-weight:700;color:var(--muted);font-size:13px;border-radius:20px}
+  .tabbar button span{display:block;font-size:20px;margin-bottom:1px}
+  .tabbar button.on{color:var(--accent);background:var(--accent-soft)}
 
   /* overlays */
   #lightbox{position:fixed;inset:0;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;flex-direction:column;z-index:20;padding:20px;cursor:zoom-out}
   #lightbox.show{display:flex}
   #lightbox img{max-width:100%;max-height:82vh;border-radius:12px}
-  #lightbox p{color:#fff;margin:12px 0 0;font-weight:600;text-align:center}
-  #toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);background:#111827;color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:30;max-width:90vw;text-align:center}
+  #lightbox p{white-space:pre-line;color:#fff;margin:12px 0 0;font-weight:600;text-align:center}
+  #toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);background:#111827;color:#fff;padding:10px 16px;border-radius:14px;font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:30;max-width:90vw;text-align:center}
   #toast.show{opacity:1;transform:translateX(-50%)}
   .loading{text-align:center;color:var(--muted);padding:60px 0}
 </style>
@@ -329,7 +341,7 @@ function statsFor(user, period) {
       const h = c.username === user && c.day === t && mine.get(c.habit_id);
       if (h) done += h.penalty ? -1 : 1;
     }
-    return { done, rate: possible ? Math.max(0, Math.min(100, Math.round(done / possible * 100))) : 0,
+    return { done, possible, rate: possible ? Math.max(0, Math.min(100, Math.round(done / possible * 100))) : 0,
       streak: streakFor(user), todayDone: done, todayTotal: possible };
   }
   const first = hs.length ? hs.map(h => localDay(h.created_at)).sort()[0] : t;
@@ -348,7 +360,7 @@ function statsFor(user, period) {
   }
   const active = hs.filter(h => h.active).map(h => h.id);
   return {
-    done,
+    done, possible,
     rate: possible ? Math.max(0, Math.min(100, Math.round(done / possible * 100))) : 0,
     streak: streakFor(user),
     todayDone: state.checkins.filter(c => c.username === user && c.day === t && active.includes(c.habit_id)).length,
@@ -369,41 +381,59 @@ function viewPicker() {
 function demoBanner() {
   return `<div class="banner"><span><b>Demo mode</b> — data lives only in this browser. Add your Supabase keys to go live.</span><button data-action="reset-demo">Reset</button></div>`;
 }
-function habitRow(h, c, count) {
+const PALETTE = ["#E87A90", "#17AEC4", "#2DB580", "#F0A35E", "#9B7BF0", "#5B9BF5", "#F27AA8", "#8CC63F"];
+function ring(pct, size, stroke, color, inner = "", cls = "") {
+  const r = (size - stroke) / 2, c = 2 * Math.PI * r, off = c * (1 - Math.max(0, Math.min(100, pct)) / 100), m = size / 2;
+  return `<div class="ring ${cls}" style="width:${size}px;height:${size}px"><svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+    <circle class="rt" cx="${m}" cy="${m}" r="${r}" stroke-width="${stroke}"/>
+    <circle class="rp" cx="${m}" cy="${m}" r="${r}" stroke-width="${stroke}" stroke="${color}" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${off}" transform="rotate(-90 ${m} ${m})"/></svg>
+    <div class="rin">${inner}</div></div>`;
+}
+function habitRow(h, c, count, idx = 0) {
   const target = h.target || 7, met = !h.penalty && count >= target;
+  const col = h.penalty ? "#ef4444" : PALETTE[idx % PALETTE.length];
+  const pct = h.penalty ? (count ? 100 : 0) : count / target * 100;
   const prog = h.penalty ? (count ? `−${count} point${count > 1 ? "s" : ""} this week` : "no M&Ms yet 🎉") : `${met ? "✓ " : ""}${count}/${target} this week`;
   const busy = state.uploading.has(h.id);
-  return `<div class="habit">
-    <button class="check ${c ? "on" : ""}" data-action="toggle" data-id="${h.id}" aria-label="${c ? "Uncheck" : "Check"} ${esc(h.name)}">${c ? "✓" : ""}</button>
-    <div class="hname ${c ? "done" : ""}"><span class="em">${esc(h.emoji || "✅")}</span>${esc(h.name)}<div class="muted small wk ${met ? "met" : ""}">${prog}</div></div>
+  const btn = `<button class="check ${c ? "on" : ""}" data-action="toggle" data-id="${h.id}" aria-label="${c ? "Uncheck" : "Check"} ${esc(h.name)}">${c ? "✓" : ""}</button>`;
+  return `<div class="habit" style="--c:${col}">
+    <div class="eic">${esc(h.emoji || "✅")}</div>
+    <div class="hname ${c ? "done" : ""}">${esc(h.name)}<div class="muted small wk ${met ? "met" : ""}">${prog}</div></div>
     ${c && c.photo_url ? `<img class="thumb" src="${esc(c.photo_url)}" data-action="zoom" data-src="${esc(c.photo_url)}" data-cap="${esc(h.emoji + " " + h.name + " · " + prettyDay(c.day))}" alt="Photo for ${esc(h.name)}">` : ""}
     <label class="cam ${busy ? "busy" : ""}" title="${c && c.photo_url ? "Replace photo" : "Add photo"}">${busy ? "⏳" : "📷"}
       <input type="file" accept="image/*" data-upload="${h.id}" hidden ${busy ? "disabled" : ""}>
     </label>
+    ${ring(pct, 52, 4, col, btn)}
   </div>`;
 }
 function viewToday() {
   const me = state.me, day = state.day, t = today();
   const habits = state.habits.filter(h => h.username === me && h.active).sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
-  const wcounts = weekCounts(me, weekStartOf(day));
   const byHabit = new Map(state.checkins.filter(c => c.username === me && c.day === day).map(c => [c.habit_id, c]));
   const done = habits.filter(h => byHabit.has(h.id)).length;
+  const wcounts = weekCounts(me, weekStartOf(day));
   const s = statsFor(me, "week");
+  const ws = weekStartOf(day), mine = new Set(habits.map(h => h.id));
+  const marked = new Set(state.checkins.filter(c => c.username === me && mine.has(c.habit_id)).map(c => c.day));
+  const strip = [0, 1, 2, 3, 4, 5, 6].map(i => {
+    const d = addDays(ws, i), off = d > t || d < addDays(t, -CONFIG.BACKFILL_DAYS);
+    return `<button class="wd ${d === day ? "sel" : ""} ${marked.has(d) ? "has" : ""}" data-action="goto-day" data-day="${d}" ${off && d !== day ? "disabled" : ""}>
+      ${"MTWTFSS"[i]}<b>${parseDay(d).getDate()}</b><i></i></button>`;
+  }).join("");
   return `
-  <div class="card">
-    <div class="daynav">
-      <button class="icon" data-action="prev-day" aria-label="Previous day" ${day <= addDays(t, -CONFIG.BACKFILL_DAYS) ? "disabled" : ""}>‹</button>
-      <div><div class="dlabel">${prettyDay(day)}</div><div class="muted small">${done} of ${habits.length} done</div></div>
-      <button class="icon" data-action="next-day" aria-label="Next day" ${day >= t ? "disabled" : ""}>›</button>
+  <div class="card heroCard heroCard2">
+    <div class="heroCardInner" style="display:flex;align-items:center;gap:18px">
+      ${ring(s.rate, 118, 11, "var(--pink)", `<b style="font-size:30px;letter-spacing:-.02em">${s.rate}%</b><span class="muted small">this week</span>`)}
+      <div class="herotxt">
+        <b class="big">${s.done} of ${s.possible}</b>
+        <span class="muted small">weekly goal check-ins</span><br>
+        <span class="pill">🔥 ${s.streak} day streak</span>
+      </div>
     </div>
-    <div class="bar big"><i style="width:${habits.length ? done / habits.length * 100 : 0}%"></i></div>
-    <div class="habits">${habits.length ? habits.map(h => habitRow(h, byHabit.get(h.id), wcounts.get(h.id) || 0)).join("") : `<p class="empty">No habits set up yet — run seed-habits.sql in Supabase.</p>`}</div>
   </div>
-  <div class="stats">
-    <div class="stat"><b>🔥 ${s.streak}</b><span class="muted small">day streak</span></div>
-    <div class="stat"><b>${s.done}</b><span class="muted small">goal check-ins this week</span></div>
-    <div class="stat"><b>${s.rate}%</b><span class="muted small">this week</span></div>
-  </div>`;
+  <div class="week">${strip}</div>
+  <div class="dlabel"><span>${prettyDay(day)}</span><span class="muted small">${done} of ${habits.length} done</span></div>
+  <div class="habits">${habits.length ? habits.map((h, i) => habitRow(h, byHabit.get(h.id), wcounts.get(h.id) || 0, i)).join("") : `<p class="empty">No habits set up yet — run seed-habits.sql in Supabase.</p>`}</div>`;
 }
 function viewBoard() {
   const p = state.period;
@@ -412,7 +442,13 @@ function viewBoard() {
   const medal = i => ["🥇", "🥈", "🥉"][i] || `<span class="rank">${i + 1}</span>`;
   const hmap = new Map(state.habits.map(h => [h.id, h]));
   const photos = state.checkins.filter(c => c.photo_url)
-    .sort((a, b) => (b.created_at || "").localeCompare(a.created_at || "")).slice(0, 30);
+    .sort((a, b) => (b.created_at || "").localeCompare(a.created_at || "")).slice(0, 60);
+  const groups = new Map(); // habit name -> photos (newest first); both people's "Run" share one group
+  for (const c of photos) {
+    const h = hmap.get(c.habit_id) || {}, key = h.name || "Other";
+    if (!groups.has(key)) groups.set(key, { emoji: h.emoji || "📷", name: key, items: [] });
+    groups.get(key).items.push(c);
+  }
   return `
   <div class="seg">${[["today","Today"],["week","This week"],["month","This month"],["all","All time"]].map(([k, l]) =>
     `<button data-action="period" data-p="${k}" class="${p === k ? "on" : ""}">${l}</button>`).join("")}</div>
@@ -421,18 +457,19 @@ function viewBoard() {
       <div class="medal">${medal(i)}</div>
       <div>
         <div class="lbname">${esc(r.u)} ${r.u === state.me ? '<span class="you">you</span>' : ""}</div>
-        <div class="bar"><i style="width:${r.rate}%"></i></div>
-        <div class="muted small" style="margin-top:4px">${r.rate}% of weekly goals · 🔥 ${r.streak} · today ${r.todayDone}/${r.todayTotal}</div>
+        <div class="muted small" style="margin-top:3px">${r.done} pts · 🔥 ${r.streak} day streak · today ${r.todayDone}/${r.todayTotal}</div>
       </div>
-      <div class="score"><b>${r.done}</b><span class="muted small">done</span></div>
+      ${ring(r.rate, 58, 6, i === 0 ? "var(--pink)" : "var(--accent)", `<b style="font-size:15px">${r.rate}%</b>`)}
     </div>`).join("")}
   </div>
   <h2>📸 Recent photos</h2>
-  ${photos.length ? `<div class="feed">${photos.map(c => {
-      const h = hmap.get(c.habit_id) || {};
-      const cap = `${c.username} · ${h.emoji || ""} ${h.name || ""} · ${prettyDay(c.day)}`;
-      return `<button class="ph" data-action="zoom" data-src="${esc(c.photo_url)}" data-cap="${esc(cap)}"><img src="${esc(c.photo_url)}" loading="lazy" alt=""><span>${esc(c.username)}</span></button>`;
-    }).join("")}</div>`
+  ${photos.length ? [...groups.values()].map(g => `
+    <div class="pgroup"><div class="ptag"><span>${esc(g.emoji)}</span> ${esc(g.name)} <em>${g.items.length}</em></div>
+    <div class="feed">${g.items.map(c => {
+      const date = prettyDay(c.day);
+      const cap = `${c.username} · ${g.emoji} ${g.name}\n${date}`;
+      return `<button class="ph" data-action="zoom" data-src="${esc(c.photo_url)}" data-cap="${esc(cap)}" title="${esc(c.username + " · " + g.name + " · " + date)}"><img src="${esc(c.photo_url)}" loading="lazy" alt="${esc(g.name + " by " + c.username)}"><b class="tag">${esc(g.emoji)}</b><span>${esc(c.username)} · ${esc(date)}</span></button>`;
+    }).join("")}</div></div>`).join("")
     : `<p class="muted">No photos yet. Tap 📷 next to a habit to add one.</p>`}`;
 }
 function render() {
@@ -446,7 +483,7 @@ function render() {
       ${!state.loaded ? `<div class="loading">Loading…</div>` : state.tab === "board" ? viewBoard() : viewToday()}
     </div>
     <nav class="tabbar">
-      <button class="${state.tab === "today" ? "on" : ""}" data-action="tab" data-tab="today"><span>✅</span>My Day</button>
+      <button class="${state.tab === "today" ? "on" : ""}" data-action="tab" data-tab="today"><span>🏠</span>My Day</button>
       <button class="${state.tab === "board" ? "on" : ""}" data-action="tab" data-tab="board"><span>🏆</span>Leaderboard</button>
     </nav>`;
 }
@@ -485,6 +522,7 @@ app.addEventListener("click", async e => {
   else if (a === "switch") { state.me = null; store("habitsquad-user", null); render(); }
   else if (a === "tab") { state.tab = el.dataset.tab; store("habitsquad-tab", state.tab); render(); window.scrollTo(0, 0); }
   else if (a === "prev-day") { state.day = addDays(state.day, -1); render(); }
+  else if (a === "goto-day") { state.day = el.dataset.day; render(); }
   else if (a === "next-day") { state.day = addDays(state.day, 1); render(); }
   else if (a === "period") { state.period = el.dataset.p; render(); }
   else if (a === "toggle") toggle(el.dataset.id);
